@@ -1,36 +1,19 @@
-#set.seed(40); 
-
-source("obs.R")
-source("random_walks_gaussian.R")
+source("processing_data/input.R")
 source("processing_data/apply.R")
+source("utilities/value_computation.R")
+source("utilities/random_walks_gaussian.R")
+library(glmnet)
+library(Rlab)
+library(Hmisc)
+library(zoo)
+#Ticker Selection
 
 
 
-filter_tickers <- function(tickers,ff=function(x){x},paths=FALSE,...){
-  companies <- tickers
-  l<- lapply(companies,function(x){
-    tryCatch({
-      data <- x %>% read_stock(.,...)
-      cond <- data %>% ff(.,...)
-      if(cond & paths)
-        return(x)
-      else if(cond & !paths)
-        return(data)
-      else
-        return(NA)
-    },error=function(e){print("Warning: Ignoring file with zero rows.")
-      return(NA)})
-  })
-  
-  
-  if(paths)
-    return(l[!is.na(l)]%>% unlist)
-  else
-    return(l %T>% {names(.)<- tickers} %>% .[!is.na(.)])
-}
 
 tickers <-   list.files("data/Stocks/") %>% paste0("data/Stocks/",.)# %>% sample(1000)
 
+#this step has already been precomputed and saved as proper_tickers.rds
 # proper_tickers <- filter_tickers(tickers,ff = function(x){
 #   total_days <- x %>% filter(between(Date,as.Date("2015-01-01"),as.Date("2015-08-31"))) %>% nrow()
 #   test_days <-  x %>% filter(between(Date,as.Date("2015-08-01"),as.Date("2015-08-31"))) %>% nrow()
@@ -38,37 +21,31 @@ tickers <-   list.files("data/Stocks/") %>% paste0("data/Stocks/",.)# %>% sample
 # },paths=TRUE)
 
 proper_tickers <-  readRDS("~/Desktop/Projects/stock-market-forecasting/proper_tickers.rds")
-proper_tickers  %>% unique %>% length
 set.seed(111);
 selected_tickers <- sample(proper_tickers,100,replace = FALSE)
+
+
+#Vectors and lists to be filled with results
 prediction_results = list()
 metrics_results = list()
 errors = list()
-
-proper_tickers <- readRDS("~/Desktop/Projects/stock-market-forecasting/proper_tickers.rds")
 pcd_times <- c()
 best_times<-c()
 best_walks_lst <- list()
-
 pcd_all <- list()
 pc_all <- list()
 value_all <- list()
 
 counter<<-1
+#The main experiment repeated for N randomly selected stocks (N=100)
 for(ticker in selected_tickers){
   
-      print(paste0(counter,"/",length(selected_tickers)))
+      print(paste0("Running main experiment...",counter,"/",length(selected_tickers)))
       counter <<- counter+1
       tryCatch({
         
     
-      #features: Time(t), Day of week, etc
-      library(glmnet)
-      library(Rlab)
-      library(Hmisc)
-      library(zoo)
-      #Ticker Selection
-      source("processing_data/input.R")
+
       x <- read_stock(ticker,from_date = as.Date("2015-01-01"),to_date=as.Date("2015-08-31"))
 
       x$in_sample <- FALSE
@@ -188,6 +165,8 @@ for(ticker in selected_tickers){
       # 
       },error=function(e){print(e)})
 }
+
+##Experimental Results
 
 names(best_walks_lst) <- selected_tickers %>% gsub(pattern="data/Stocks/",replacement = "") %>% gsub(pattern=".us.txt",replacement="")
 

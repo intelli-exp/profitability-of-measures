@@ -1,38 +1,10 @@
 library(dplyr)
 library(zoo)
 
-obs <- function(capital,actual,x){
-  cummin <- rollapply(x,FUN=min,partial=T,align="right",width=length(x))
-  df <- data.frame(t=1:length(x),x=x,cummin=cummin)
-  df$dist_cummin <- df$x - df$cummin
-  pmax <- max(which(df$dist_cummin == max(df$dist_cummin)))
-  pmin <- min(which(df$cummin == df[pmax,]$cummin))
-  df$opt <- FALSE
-  df[c(pmax,pmin),]$opt <- T
-  
-  df$spec <- FALSE
-  df$spec[c(pmin,pmax)] <- TRUE
- #  plt1<-ggplot(df) + geom_point(aes(x=t,y=x)) + geom_point(data= df %>% filter(spec),aes(x=t,y=x),color="red")
 
-   df$actual <- actual
-  # plt2<-ggplot(df) + geom_point(aes(x=t,y=actual)) + geom_point(data= df %>% filter(spec),aes(x=t,y=actual),color="red")
-   
-  # grid.arrange(plt1,plt2,ncol=1) %>% print
-  
-  own <- 0
-  buy_price <- actual[pmin]
-  sell_price <-actual[pmax]
-  
-  #buy
-  own <- floor(capital/buy_price)
-  capital <- capital - own*buy_price
-  #sell
-  capital <- capital + own*sell_price
-  own <- 0
-  return(capital)
-}
 
 library(Hmisc)
+#optimal buy sell strategy allowing multiple action
 mobs <- function(capital,actual,x){
   df <- data.frame(t=1:length(x),x=x,x_prev = Lag(x,1),x_next=Lag(x,-1))
   df$is_max = x> df$x_prev & x> df$x_next
@@ -69,6 +41,39 @@ mobs <- function(capital,actual,x){
   return(capital)
   
 }
+
+#optimal buy sell strategy, with a single action
+obs <- function(capital,actual,x){
+  cummin <- rollapply(x,FUN=min,partial=T,align="right",width=length(x))
+  df <- data.frame(t=1:length(x),x=x,cummin=cummin)
+  df$dist_cummin <- df$x - df$cummin
+  pmax <- max(which(df$dist_cummin == max(df$dist_cummin)))
+  pmin <- min(which(df$cummin == df[pmax,]$cummin))
+  df$opt <- FALSE
+  df[c(pmax,pmin),]$opt <- T
+  
+  df$spec <- FALSE
+  df$spec[c(pmin,pmax)] <- TRUE
+ #  plt1<-ggplot(df) + geom_point(aes(x=t,y=x)) + geom_point(data= df %>% filter(spec),aes(x=t,y=x),color="red")
+
+   df$actual <- actual
+  # plt2<-ggplot(df) + geom_point(aes(x=t,y=actual)) + geom_point(data= df %>% filter(spec),aes(x=t,y=actual),color="red")
+   
+  # grid.arrange(plt1,plt2,ncol=1) %>% print
+  
+  own <- 0
+  buy_price <- actual[pmin]
+  sell_price <-actual[pmax]
+  
+  #buy
+  own <- floor(capital/buy_price)
+  capital <- capital - own*buy_price
+  #sell
+  capital <- capital + own*sell_price
+  own <- 0
+  return(capital)
+}
+
 
 
 

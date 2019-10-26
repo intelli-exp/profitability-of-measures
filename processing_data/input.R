@@ -17,4 +17,3 @@ read_stock <- function(path="data/Stocks/a.us.txt",from_date=as.Date("1800/1/1")
   return(stock_data)
 }
 
-read_stock()

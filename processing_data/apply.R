@@ -25,7 +25,7 @@ map_data <- function(data,ff=function(x){x},...){
 #FILTER
 
 filter_tickers <- function(tickers,ff=function(x){x},paths=FALSE,...){
-  companies <- paste0("data/Stocks/", tickers,".us.txt")
+  companies <- tickers
   l<- lapply(companies,function(x){
     tryCatch({
       data <- x %>% read_stock(.,...)
@@ -36,17 +36,16 @@ filter_tickers <- function(tickers,ff=function(x){x},paths=FALSE,...){
         return(data)
       else
         return(NA)
-  },error=function(e){print(e)
-    return(NA)})
-    })
-    
-    
+    },error=function(e){print("Warning: Ignoring file with zero rows.")
+      return(NA)})
+  })
+  
+  
   if(paths)
     return(l[!is.na(l)]%>% unlist)
   else
     return(l %T>% {names(.)<- tickers} %>% .[!is.na(.)])
 }
-
 
 filter_data <- function(data,ff=function(x){x},...){
   l<- lapply(data,function(x){
