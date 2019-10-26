@@ -1,3 +1,5 @@
+#Code to generate Figure 2
+
 library(dplyr)
 x <- (15+cos(seq(0,(4*pi),length.out = 100) )) %>%
   c(., seq(16,11,length.out=100),10+cos(seq(0,(4*pi),length.out = 100) ) )
@@ -37,13 +39,3 @@ plt4 <- ggplot() +
 
 library(gridExtra)
 grid.arrange(plt1,plt3,plt2,plt4,nrow=2,ncol=2)
-
-t <- 1:length(x)
-td <- 1:length(xd)
-togeth <- (x > mean(x)) & (y > mean(y)) | (x < mean(x)) & (y < mean(y)) 
-togeth_d <-  (xd > mean(xd)) & (yd > mean(yd)) | (xd < mean(xd)) & (yd < mean(yd)) 
-
-geom_rect(t[togeth],y=)
-
-cor(x,y)
-cor(xd,yd)

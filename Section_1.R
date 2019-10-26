@@ -1,3 +1,5 @@
+#Code to generate Figure 1 and related results
+
 t <- seq(0,12*pi,length.out=100)
 y <- sin(0.5*t)
 plot(y)
